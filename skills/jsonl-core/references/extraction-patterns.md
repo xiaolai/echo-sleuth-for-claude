@@ -1,4 +1,4 @@
-# Extraction Patterns — Grep/Awk Patterns for Common Queries
+# Extraction Patterns — Grep Patterns for Common Queries
 
 **Note:** These grep patterns assume common JSON formatting. They are heuristics for quick scanning — Claude Code's JSON output may vary in whitespace. For robust parsing, use the Python-based extraction scripts.
 
@@ -8,12 +8,10 @@
 ```bash
 # Lines that are user type AND have string content (not array)
 grep '"type":"user"' file.jsonl | grep -v '"tool_result"' | grep -v '"isMeta":true'
-# Or use: grep -E '"type"\s*:\s*"user"' for flexible spacing
 ```
 
 ### Assistant Text Responses
 ```bash
-# All assistant text blocks
 grep '"type":"assistant"' file.jsonl | grep -v '"<synthetic>"'
 ```
 
@@ -96,12 +94,7 @@ for f in ~/.claude/projects/<project-dir>/*.jsonl; do
 done
 ```
 
-## Useful awk One-Liners
-
-### Count messages by type in a session
-```bash
-awk -F'"type"' '{for(i=2;i<=NF;i++){match($i,/:\s*"([^"]+)"/,m);types[m[1]]++}} END{for(t in types)print types[t],t}' file.jsonl | sort -rn
-```
+## Useful One-Liners
 
 ### Extract all unique tool names used
 ```bash
@@ -112,3 +105,9 @@ grep -o '"name":"[^"]*"' file.jsonl | sort -u
 ```bash
 grep '"type":"user"' file.jsonl | grep -v '"tool_result"' | grep -o '"timestamp":"[^"]*"' | head -20
 ```
+
+### Count messages by type (using parse-jsonl.sh)
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh file.jsonl --detect-schema
+```
+This gives per-type record counts without fragile awk patterns.

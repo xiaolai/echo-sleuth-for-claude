@@ -1,23 +1,30 @@
 ---
 name: jsonl-core
 description: This skill should be used when the user asks to "analyze conversation history", "parse JSONL files", "read past sessions", "search conversation logs", "find what happened in a session", or needs to work with Claude Code's .jsonl conversation format. It provides the canonical parsing infrastructure for echo-sleuth agents.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # JSONL Core — Conversation Parsing Infrastructure
 
+## Architecture
+
+All parsing logic lives in `${CLAUDE_PLUGIN_ROOT}/scripts/echolib.py` — a single Python module (stdlib only, Python 3.6+). The shell scripts are thin wrappers around it.
+
 ## Data Locations
 
 - **Session index (fast path)**: `~/.claude/projects/<encoded-path>/sessions-index.json`
+- **Fallback index (built by echo-sleuth)**: `~/.claude/projects/<encoded-path>/.echo-sleuth-index.json`
 - **Full conversations**: `~/.claude/projects/<encoded-path>/<uuid>.jsonl`
 - **Subagent conversations**: `~/.claude/projects/<encoded-path>/<uuid>/subagents/agent-<id>.jsonl`
 - **Global prompt history**: `~/.claude/history.jsonl`
 
 The `<encoded-path>` is the project's absolute path with `/` replaced by `-` (e.g., `-Users-joker-github-myproject`).
 
+**Important:** Only ~10% of projects have `sessions-index.json`. The scripts automatically build a fallback index from raw `.jsonl` files for the remaining 90%, cached in `.echo-sleuth-index.json`.
+
 ## Strategy: Fast Path First
 
-Always start with `sessions-index.json` before opening any `.jsonl` file:
+Always start with the index before opening any `.jsonl` file:
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/list-sessions.sh "current" --limit 20
@@ -27,13 +34,11 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/list-sessions.sh "/path/to/project"
 
 Output is tab-separated: `SESSION_ID  CREATED  MODIFIED  MSG_COUNT  BRANCH  SUMMARY  FIRST_PROMPT  PROJECT_PATH  FULL_PATH`
 
-The `FULL_PATH` field (9th column) is the absolute path to the `.jsonl` file. Use this to pass to other scripts like `extract-messages.sh`.
+The `FULL_PATH` field (9th column) is the absolute path to the `.jsonl` file. Use this to pass to other scripts.
 
 Only open the full `.jsonl` when you need message-level detail.
 
 ## Canonical Parser
-
-The primary parsing tool for all JSONL operations:
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> [options]
@@ -44,7 +49,7 @@ Key modes:
   ```bash
   bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --detect-schema
   ```
-- **Filtered extraction** (skip noise, 38% faster on large files):
+- **Filtered extraction** (skip noise, ~38% faster on large files):
   ```bash
   bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --types user,assistant --skip-noise --limit 20
   ```
@@ -53,22 +58,15 @@ Key modes:
   bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --types user --fields timestamp,message --format tsv
   ```
 
-### Performance Notes
-
-- Python3 startup (80ms) dominates for files < 1MB (97% of all files)
-- `--limit N` enables early exit — near-instant for small N
-- `--skip-noise` avoids `json.loads` on `progress`/`queue-operation` lines by string pre-filter
-- For the 81 files > 10MB: `json.loads` is the CPU bottleneck (63% of time), not I/O
-- grep is NOT faster than Python for this format — avoid grep-then-parse pipelines
-
 ## Convenience Scripts
 
-All scripts are at `${CLAUDE_PLUGIN_ROOT}/scripts/`. They require only bash + python3 (stdlib only, no pip packages, minimum Python 3.6+). The git scripts use bash + awk + git.
+All scripts are at `${CLAUDE_PLUGIN_ROOT}/scripts/`. They require only bash + python3 (stdlib only, no pip packages, minimum Python 3.6+). The git scripts additionally use git.
 
 ### Extract human-readable messages
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-messages.sh <file.jsonl> [--role user|assistant|both] [--no-tools] [--limit N] [--thinking]
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-messages.sh <file.jsonl> [--role user|assistant|both] [--no-tools] [--limit N] [--thinking [LIMIT]]
 ```
+Note: `--thinking` without a number shows full thinking blocks. `--thinking 500` truncates to 500 chars. Default: thinking blocks are hidden.
 
 ### Extract tool calls with results
 ```bash
@@ -79,11 +77,37 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-tools.sh <file.jsonl> [--tool NAME] [
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-files-changed.sh <file.jsonl> [--with-versions]
 ```
+Uses reverse-read on large files (>50MB) to find the last snapshot efficiently.
 
-### Quick session statistics
+### Quick session statistics (single-pass)
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-stats.sh <file.jsonl>
 ```
+
+### Build fallback index
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/build-index.sh [project-path|"all"]
+```
+Pre-warm the cache for projects without `sessions-index.json`.
+
+## Subagent Discovery
+
+Sessions with subagent work have a `<session-uuid>/subagents/` directory. Check for it:
+```bash
+ls "$(dirname <full_path>)/$(basename <full_path> .jsonl)/subagents/" 2>/dev/null
+```
+
+Subagent files follow the same JSONL format and can be parsed with the same scripts.
+
+## Performance Notes
+
+- Python3 startup (80ms) dominates for files < 1MB (97% of all files)
+- `--limit N` enables early exit — near-instant for small N
+- `--skip-noise` avoids `json.loads` on progress/queue-operation lines by string pre-filter
+- For files > 10MB: `json.loads` is the CPU bottleneck (63% of time), not I/O
+- `extract-files-changed.sh` uses reverse-read on files > 50MB
+- `session-stats.sh` counts errors in the same pass (no double-read)
+- grep is NOT faster than Python for this format — avoid grep-then-parse pipelines
 
 ## When Scripts Are Not Enough
 
@@ -124,7 +148,7 @@ To map a project path to its Claude session directory:
 3. Prepend `-` → `-Users-joker-github-myproject`
 4. Look in `~/.claude/projects/-Users-joker-github-myproject/`
 
-If unsure, use `list-sessions.sh` which handles the lookup automatically.
+If unsure, use `list-sessions.sh` which handles the lookup automatically (including fuzzy matching via `sessions-index.json` originalPath).
 
 ## Noise Filtering
 

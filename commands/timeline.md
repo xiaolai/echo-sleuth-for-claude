@@ -8,47 +8,30 @@ Show a chronological timeline of work on the current project, combining Claude C
 
 Optional arguments: $ARGUMENTS
 
-## Workflow
+Launch the `recall` agent via the Task tool with the following context:
 
-1. **List all sessions** for the current project:
-   ```
-   bash ${CLAUDE_PLUGIN_ROOT}/scripts/list-sessions.sh current --limit 50
-   ```
+- **Focus**: timeline / project history
+- **Task**: Build a chronological timeline of all work on the current project
+- **Combine**: Claude Code sessions (what was discussed, tried, failed) + git commits (what shipped)
+- **Default limit**: 50 sessions, 30 days of git history
+- **Parse any flags**: --limit N, --since YYYY-MM-DD from: $ARGUMENTS
 
-2. **Get git history** if this is a git repo:
-   ```
-   bash ${CLAUDE_PLUGIN_ROOT}/scripts/git-sessions.sh . --since "30 days ago"
-   ```
+The agent should:
+1. List all sessions for the current project
+2. Get git history if this is a git repo
+3. Merge both timelines chronologically, correlating by timestamp
+4. Enrich key sessions (high message count, error-heavy, or milestones) with stats
+5. Present as a timeline with clear markers for milestones
 
-3. **Merge both timelines** chronologically:
-   - Claude sessions provide: what was discussed, what was tried, errors encountered
-   - Git commits provide: what actually shipped, code changes made
-   - Correlate by timestamp (commits during a session's time window belong to that session)
-
-4. **Enrich key sessions**: For the most significant sessions (high message count, error-heavy, or milestone sessions like PR creation), get additional detail:
-   ```
-   bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-stats.sh <file>
-   ```
-
-5. **Present as timeline**: Chronological, with clear markers for milestones.
-
-## Output Format
-
+Output format:
 ```
 # Project Timeline: [project name]
 Branch: [current branch]
 Period: [earliest] → [latest]
 Total: [N sessions, M git commits]
 
----
-
 ### [YYYY-MM-DD] — [Session summary]
   Branch: [branch] | Messages: [N] | Files: [N]
   [1-2 sentence description]
-  Git: [commit hash] [commit message] (if commits match this time window)
-
-### [YYYY-MM-DD] — [Session summary]
-  ...
+  Git: [commit hash] [commit message]
 ```
-
-Mark notable milestones with emphasis: PR creation, major features, significant bug fixes.

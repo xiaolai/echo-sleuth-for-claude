@@ -7,6 +7,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 FILE="${1:?Usage: extract-tools.sh <file.jsonl> [--tool NAME] [--errors-only] [--limit N]}"
 shift
 
@@ -29,93 +31,20 @@ if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then
 fi
 
 ES_FILE="$FILE" ES_TOOL="$TOOL_FILTER" ES_ERRORS="$ERRORS_ONLY" ES_LIMIT="$LIMIT" \
+ES_SCRIPT_DIR="$SCRIPT_DIR" \
 python3 << 'PYEOF'
-import json, sys, os
+import os, sys
+sys.path.insert(0, os.environ["ES_SCRIPT_DIR"])
+import echolib
 
-file_path = os.environ['ES_FILE']
-tool_filter = os.environ.get('ES_TOOL', '')
-errors_only = os.environ.get('ES_ERRORS', '0') == '1'
-limit = int(os.environ.get('ES_LIMIT', '0'))
+file_path = os.environ["ES_FILE"]
+tool_filter = os.environ.get("ES_TOOL", "")
+errors_only = os.environ.get("ES_ERRORS", "0") == "1"
+limit = int(os.environ.get("ES_LIMIT", "0"))
 
-tool_calls = {}   # id -> (ts, name, key_input)
-tool_order = []
-tool_results = {}  # id -> (is_error, preview)
-
-with open(file_path) as f:
-    for line in f:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            rec = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-
-        rtype = rec.get('type', '')
-        ts = rec.get('timestamp', '')[:19] if rec.get('timestamp') else ''
-        msg = rec.get('message', {})
-        content = msg.get('content', '')
-
-        if rtype == 'assistant' and isinstance(content, list):
-            for block in content:
-                if not isinstance(block, dict) or block.get('type') != 'tool_use':
-                    continue
-                tid = block.get('id', '')
-                name = block.get('name', '')
-                inp = block.get('input', {})
-                if not isinstance(inp, dict):
-                    inp = {}
-
-                if tool_filter and name != tool_filter:
-                    continue
-
-                key = ''
-                if name in ('Read', 'Write', 'Edit', 'MultiEdit'):
-                    key = inp.get('file_path', '')
-                elif name == 'Bash':
-                    key = inp.get('command', '')[:120].replace('\n', ' ')
-                elif name in ('Grep', 'Glob'):
-                    key = inp.get('pattern', '')
-                elif name == 'Task':
-                    key = inp.get('description', '')
-                elif name == 'WebSearch':
-                    key = inp.get('query', '')
-                elif name == 'WebFetch':
-                    key = inp.get('url', '')
-
-                tool_calls[tid] = (ts, name, key)
-                tool_order.append(tid)
-
-        elif rtype == 'user' and isinstance(content, list):
-            for block in content:
-                if not isinstance(block, dict) or block.get('type') != 'tool_result':
-                    continue
-                tid = block.get('tool_use_id', '')
-                is_error = block.get('is_error', False)
-                rc = block.get('content', '')
-                if isinstance(rc, list):
-                    preview = ' '.join(
-                        b.get('text', '')[:100]
-                        for b in rc if isinstance(b, dict)
-                    )
-                elif isinstance(rc, str):
-                    preview = rc[:150].replace('\n', ' ').replace('\t', ' ')
-                else:
-                    preview = ''
-                tool_results[tid] = ('error' if is_error else 'ok', preview)
-
-count = 0
-for tid in tool_order:
-    if tid not in tool_calls:
-        continue
-    ts, name, key = tool_calls[tid]
-    status, preview = tool_results.get(tid, ('ok', '(no result captured)'))
-
-    if errors_only and status != 'error':
-        continue
-    if limit > 0 and count >= limit:
-        break
-
-    print(f'{ts}\t{name}\t{status}\t{key}\t{preview}')
-    count += 1
+for t in echolib.extract_tools(file_path, tool_filter=tool_filter,
+                                 errors_only=errors_only, limit=limit):
+    print("{}\t{}\t{}\t{}\t{}".format(
+        t["timestamp"], t["name"], t["status"],
+        t["key_input"], t["result_preview"]))
 PYEOF
