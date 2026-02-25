@@ -1,0 +1,10 @@
+{
+  "name": "echo-sleuth",
+  "version": "0.1.0",
+  "description": "Mine past Claude Code conversations for decisions, mistakes, patterns, and wisdom",
+  "author": {
+    "name": "xiaolai"
+  },
+  "license": "MIT",
+  "keywords": ["conversation-history", "session-recall", "experience-mining", "git-history"]
+}
