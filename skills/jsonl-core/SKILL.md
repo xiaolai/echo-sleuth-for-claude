@@ -31,7 +31,37 @@ The `FULL_PATH` field (9th column) is the absolute path to the `.jsonl` file. Us
 
 Only open the full `.jsonl` when you need message-level detail.
 
-## Parsing Scripts
+## Canonical Parser
+
+The primary parsing tool for all JSONL operations:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> [options]
+```
+
+Key modes:
+- **Schema detection** (check if format has changed):
+  ```bash
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --detect-schema
+  ```
+- **Filtered extraction** (skip noise, 38% faster on large files):
+  ```bash
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --types user,assistant --skip-noise --limit 20
+  ```
+- **Field selection** (only extract specific fields):
+  ```bash
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --types user --fields timestamp,message --format tsv
+  ```
+
+### Performance Notes
+
+- Python3 startup (80ms) dominates for files < 1MB (97% of all files)
+- `--limit N` enables early exit — near-instant for small N
+- `--skip-noise` avoids `json.loads` on `progress`/`queue-operation` lines by string pre-filter
+- For the 81 files > 10MB: `json.loads` is the CPU bottleneck (63% of time), not I/O
+- grep is NOT faster than Python for this format — avoid grep-then-parse pipelines
+
+## Convenience Scripts
 
 All scripts are at `${CLAUDE_PLUGIN_ROOT}/scripts/`. They require only bash + python3 (stdlib only, no pip packages, minimum Python 3.6+). The git scripts use bash + awk + git.
 
@@ -104,3 +134,19 @@ When reading raw `.jsonl`, skip these:
 - User records with `isCompactSummary: true` (auto-generated context, not human input)
 - Assistant records with `model: "<synthetic>"` (passthrough, not real inference)
 - User records where `content` is an array of `tool_result` blocks (tool outputs, not human messages)
+
+Use `--skip-noise` with `parse-jsonl.sh` for automatic noise filtering, or use the convenience scripts which handle this internally.
+
+## Schema Evolution Awareness
+
+Claude Code evolves rapidly. The JSONL format has changed across versions:
+- New record types appear silently (e.g., `progress` at v2.1.14, `pr-link` later)
+- New optional fields are added to existing records (~3-5 per minor version)
+- Some record types (`summary`, `pr-link`, `file-history-snapshot`) lack common fields like `version` or `uuid`
+- The directory encoding is lossy for Unicode paths — use `sessions-index.json`'s `originalPath` field as ground truth
+
+When parsing results look unexpected, use the schema-scout agent or run:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/parse-jsonl.sh <file.jsonl> --detect-schema
+```
+to check for unknown record types or field changes.
