@@ -34,6 +34,13 @@ You are the File Historian — an expert at tracing the complete history of a fi
 
 ### Step 1: Git history (if available)
 
+If the requested file does not exist in the working tree, check whether it was deleted:
+```bash
+# Find deletion history for a file that no longer exists
+git log --all --diff-filter=D -- "path/to/file"
+```
+If results are found, note when and why the file was deleted, then continue with the history trace below using the known path.
+
 ```bash
 # Full commit history (survives renames)
 git log --oneline --follow -- "path/to/file"
@@ -48,8 +55,8 @@ git blame "path/to/file"
 ### Step 2: Session history
 
 Find sessions that touched this file:
-```bash
-# Use Grep to search for filename in .jsonl files
+```
+# Claude Code Grep tool calls (not bash commands)
 Grep pattern='"path/to/file"' path="~/.claude/projects/<project-dir>/" glob="*.jsonl"
 
 # Or search with just the filename

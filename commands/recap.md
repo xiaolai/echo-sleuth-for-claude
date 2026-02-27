@@ -20,9 +20,10 @@ Launch the `recall` agent via the Task tool with the following context:
 
 The agent should:
 1. List recent sessions using `bash ${CLAUDE_PLUGIN_ROOT}/scripts/list-sessions.sh current --limit N`
-2. For each session, get stats: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-stats.sh <path>`
-3. For medium/high detail, read user messages: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-messages.sh <path> --role user --no-tools --limit 10`
-4. Synthesize: what was accomplished, what's in progress, what problems were encountered
+2. If zero sessions are found, report "No sessions found for the current project." and suggest the user check that they are in the correct project directory, or try `list-sessions.sh all` to search across all projects.
+3. For each session, get stats: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-stats.sh <path>`
+4. For medium/high detail, read user messages: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-messages.sh <path> --role user --no-tools --limit 10`
+5. Synthesize: what was accomplished, what's in progress, what problems were encountered
 
 Detail levels:
 - **low**: Date, summary, message count, file count per session + overall trajectory

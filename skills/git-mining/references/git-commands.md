@@ -1,3 +1,7 @@
+---
+description: Git log, blame, and diff commands used for correlating commits with session history
+---
+
 # Git Commands Reference for Echo Sleuth
 
 ## Log Format Placeholders

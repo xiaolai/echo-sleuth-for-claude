@@ -114,8 +114,12 @@ Subagent files follow the same JSONL format and can be parsed with the same scri
 For targeted searches within large `.jsonl` files, use Grep directly:
 
 ```
-# Find user messages containing a keyword
-Grep pattern='"type":"user"' combined with Grep pattern='keyword'
+# Find user messages containing a keyword (two-step workflow):
+# Step 1: Find lines matching the record type
+Grep pattern='"type":"user"' path="<file.jsonl>" output_mode="content"
+# Step 2: From those results, visually scan or re-grep for your keyword.
+#         Alternatively, combine both conditions in one regex:
+Grep pattern='"type":"user".*keyword' path="<file.jsonl>" output_mode="content"
 
 # Find error results
 Grep pattern='"is_error"\s*:\s*true'

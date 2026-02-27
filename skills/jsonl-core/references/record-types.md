@@ -1,3 +1,7 @@
+---
+description: Complete field reference for all JSONL record types in Claude Code conversation files
+---
+
 # JSONL Record Types — Complete Field Reference
 
 ## Common Fields (on most records)

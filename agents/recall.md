@@ -75,6 +75,8 @@ The output is tab-separated with 9 fields. The 9th field (`FULL_PATH`) is the ab
 
 ### Step 2: Deep dive into promising sessions
 
+**Limit deep dives to the top 3-5 most relevant sessions.** Rank by relevance (keyword match strength, recency, message count) and only call extraction scripts on the top candidates. This prevents excessive script calls on large histories.
+
 For each relevant session, gather context:
 
 ```bash
@@ -103,8 +105,8 @@ ls "$(dirname <full_path>)/$(basename <full_path> .jsonl)/subagents/" 2>/dev/nul
 ### Step 3: Deep search (if index search wasn't enough)
 
 Search inside `.jsonl` files directly:
-```bash
-# Use Grep on specific project directories
+```
+# Claude Code Grep tool call (not a bash command)
 Grep pattern='"keyword"' path="~/.claude/projects/<project-dir>/" glob="*.jsonl"
 ```
 

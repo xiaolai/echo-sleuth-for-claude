@@ -1,3 +1,7 @@
+---
+description: Grep patterns and one-liners for extracting specific data from JSONL session files
+---
+
 # Extraction Patterns — Grep Patterns for Common Queries
 
 **Note:** These grep patterns assume common JSON formatting. They are heuristics for quick scanning — Claude Code's JSON output may vary in whitespace. For robust parsing, use the Python-based extraction scripts.

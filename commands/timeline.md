@@ -18,10 +18,11 @@ Launch the `recall` agent via the Task tool with the following context:
 
 The agent should:
 1. List all sessions for the current project
-2. Get git history if this is a git repo
-3. Merge both timelines chronologically, correlating by timestamp
+2. Check if this is a git repo (`git rev-parse --is-inside-work-tree`). If yes, get git history. If not, skip git data and build the timeline from session data only.
+3. Merge both timelines chronologically, correlating by timestamp (session-only if not a git repo)
 4. Enrich key sessions (high message count, error-heavy, or milestones) with stats
 5. Present as a timeline with clear markers for milestones
+6. If not a git repo, note at the top: "No git repository detected — timeline is based on session data only."
 
 Output format:
 ```

@@ -1,3 +1,7 @@
+---
+description: Taxonomy of insight categories for classifying patterns extracted from session history
+---
+
 # Insight Taxonomy — Detailed Category Reference
 
 ## Category 1: Decisions
