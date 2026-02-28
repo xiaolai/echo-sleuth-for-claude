@@ -17,8 +17,7 @@ shift
 ROLE="both"
 NO_TOOLS=0
 LIMIT=0
-THINKING_LIMIT=0  # 0 = full, -1 = hide (default: hide)
-THINKING_LIMIT=-1
+THINKING_LIMIT=-1  # 0 = full, -1 = hide (default: hide)
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

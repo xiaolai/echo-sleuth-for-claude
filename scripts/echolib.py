@@ -659,7 +659,7 @@ def _reverse_find(path, needle, chunk_size=1_048_576):
             except Exception:
                 pass
 
-    return last_match
+    return None
 
 
 # ---------------------------------------------------------------------------

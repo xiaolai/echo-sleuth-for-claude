@@ -11,6 +11,8 @@ Echo Sleuth analyzes your Claude Code session history (`~/.claude/projects/`) to
 - **Build timelines** — chronological project history combining sessions and git commits
 - **Extract lessons** — surface patterns, mistakes, and decisions worth remembering
 
+Part of the [xiaolai plugin marketplace](https://github.com/xiaolai/claude-plugin-marketplace).
+
 ## Installation
 
 Add the marketplace (once):

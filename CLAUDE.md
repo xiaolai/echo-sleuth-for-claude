@@ -50,6 +50,7 @@ All in `scripts/`, require only Python 3.6+ (stdlib only) and bash. Git scripts 
 - **Script-based parsing**: Use the provided scripts instead of ad-hoc grep/jq pipelines. `echolib.py` handles schema variations and noise filtering.
 - **Grep tool is not bash**: In agent/skill docs, `Grep pattern=...` calls refer to the Claude Code Grep tool, not the bash `grep` command.
 - **`${CLAUDE_PLUGIN_ROOT}`**: Resolves to this plugin's root directory at runtime. Use it to reference scripts.
+- **Cache side effect**: `build-index.sh` / `build_fallback_index()` writes `.echo-sleuth-index.json` inside `~/.claude/projects/<dir>/`. This is excluded from the plugin repo via `.gitignore`.
 
 ## Prerequisites
 

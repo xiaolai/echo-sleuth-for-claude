@@ -1,0 +1,21 @@
+{
+  "name": "xiaolai",
+  "plugins": [
+    {
+      "name": "echo-sleuth",
+      "source": {
+        "source": "github",
+        "repo": "xiaolai/echo-sleuth-for-claude"
+      },
+      "description": "Mine past Claude Code conversations for decisions, mistakes, patterns, and wisdom",
+      "version": "0.2.1",
+      "author": {
+        "name": "xiaolai"
+      },
+      "repository": "https://github.com/xiaolai/echo-sleuth-for-claude",
+      "license": "MIT",
+      "keywords": ["conversation-history", "session-recall", "experience-mining", "git-history"],
+      "category": "developer-tools"
+    }
+  ]
+}
