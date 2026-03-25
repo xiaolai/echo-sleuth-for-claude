@@ -44,6 +44,17 @@ Then install:
 
 > When installed as a plugin, commands appear as `/echo-sleuth:<command>` (e.g. `/echo-sleuth:recall`).
 
+## Memory Management
+
+Echo Sleuth 0.3.0 adds a memory lifecycle layer for auditing, extracting, and pruning Claude Code memory files (`MEMORY.md` / `CLAUDE.md`).
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/dashboard` | Global memory overview and staleness alerts | `/echo-sleuth:dashboard` |
+| `/audit` | Memory staleness audit (heuristic or deep) | `/echo-sleuth:audit --deep` |
+| `/extract` | Extract knowledge from conversation sessions | `/echo-sleuth:extract` |
+| `/prune` | Interactive memory cleanup | `/echo-sleuth:prune` |
+
 ## How it works
 
 1. **Commands** are user-facing entry points that dispatch to specialized agents

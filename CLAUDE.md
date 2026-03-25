@@ -20,17 +20,23 @@ scripts/   → Python/bash tools that do the actual JSONL parsing and extraction
 - `/recap` — Summarize recent sessions
 - `/timeline` — Chronological project history (sessions + git)
 - `/lessons` — Extract lessons learned
+- `/dashboard` — Global memory overview and staleness alerts
+- `/audit` — Memory staleness audit (heuristic or deep)
+- `/extract` — Extract knowledge from conversation sessions
+- `/prune` — Interactive memory cleanup
 
 ### Agents
 - `recall` — Unified search: session finding, decision archaeology, mistake hunting
 - `file-historian` — Trace a file's history across sessions and git
 - `analyze` — Deep analysis of specific sessions
 - `schema-scout` — Detect JSONL schema changes
+- `memory-auditor` — Deep content-aware memory verification
 
 ### Skills
 - `jsonl-core` — Canonical JSONL parsing infrastructure and record type reference
 - `git-mining` — Git log/blame/diff patterns for correlating commits with sessions
 - `experience-synthesis` — Taxonomy for categorizing insights (decisions, mistakes, patterns)
+- `memory-management` — Memory format, staleness scoring, and routing knowledge
 
 ### Scripts
 All in `scripts/`, require only Python 3.6+ (stdlib only) and bash. Git scripts additionally require git.
@@ -43,6 +49,8 @@ All in `scripts/`, require only Python 3.6+ (stdlib only) and bash. Git scripts 
 - `parse-jsonl.sh` — Low-level JSONL parser with schema detection
 - `build-index.sh` — Build fallback index for projects without sessions-index.json
 - `git-context.sh` / `git-sessions.sh` — Git history helpers
+- `memory-dashboard.sh` — Memory overview and heuristic audit output
+- `extract-knowledge.sh` — Two-pass knowledge extraction from sessions
 
 ## Key Conventions
 
@@ -57,3 +65,4 @@ All in `scripts/`, require only Python 3.6+ (stdlib only) and bash. Git scripts 
 - Python 3.6+ (stdlib only, no pip packages)
 - bash
 - git (optional, needed only for git-mining features and git-based agents)
+- curl (optional, needed only for URL validation in /audit --deep)
