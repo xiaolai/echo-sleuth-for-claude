@@ -1,15 +1,18 @@
 # echo-sleuth
 
-Mine past Claude Code conversations for decisions, mistakes, patterns, and wisdom.
+Mine past Claude Code conversations and manage the knowledge lifecycle — search sessions, extract lessons, audit memory staleness, prune token waste.
 
 ## What it does
 
-Echo Sleuth analyzes your Claude Code session history (`~/.claude/projects/`) to help you recall past work, trace decisions, learn from mistakes, and understand file histories.
+Echo Sleuth analyzes your Claude Code session history (`~/.claude/projects/`) and memory files to help you:
 
 - **Search past sessions** — find conversations by keyword, date, or file
 - **Summarize recent work** — get a quick recap of what happened across sessions
 - **Build timelines** — chronological project history combining sessions and git commits
 - **Extract lessons** — surface patterns, mistakes, and decisions worth remembering
+- **Audit memories** — find stale, broken, or wasteful memories across all projects
+- **Extract knowledge** — distill conversations into durable memories, CLAUDE.md rules, or human notes
+- **Prune waste** — interactively clean up memories that silently eat tokens and money
 
 Part of the [xiaolai plugin marketplace](https://github.com/xiaolai/claude-plugin-marketplace).
 
@@ -35,46 +38,206 @@ Then install:
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `/recall` | Search and analyze past sessions |
-| `/recap` | Summarize recent sessions |
-| `/timeline` | Chronological project history (sessions + git) |
-| `/lessons` | Extract lessons learned from past sessions |
-
 > When installed as a plugin, commands appear as `/echo-sleuth:<command>` (e.g. `/echo-sleuth:recall`).
 
-## Memory Management
+### Conversation Mining
 
-Echo Sleuth 0.3.0 adds a memory lifecycle layer for auditing, extracting, and pruning Claude Code memory files (`MEMORY.md` / `CLAUDE.md`).
+#### `/recall <topic> [--scope current|all] [--limit N]`
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/dashboard` | Global memory overview and staleness alerts | `/echo-sleuth:dashboard` |
-| `/audit` | Memory staleness audit (heuristic or deep) | `/echo-sleuth:audit --deep` |
-| `/extract` | Extract knowledge from conversation sessions | `/echo-sleuth:extract` |
-| `/prune` | Interactive memory cleanup | `/echo-sleuth:prune` |
+Search past conversations for a topic, decision, or mistake.
+
+```
+/echo-sleuth:recall "why did we choose SQLite"
+/echo-sleuth:recall "authentication bug" --scope all
+/echo-sleuth:recall "CI setup" --limit 20
+```
+
+- Searches session summaries, first prompts, and message content
+- Auto-detects focus: decision archaeology ("why did we..."), mistake hunting ("what went wrong..."), or general search
+- Default scope: current project. Use `--scope all` to search across all projects.
+
+#### `/recap [N-sessions|duration] [--detail low|medium|high]`
+
+Summarize recent sessions.
+
+```
+/echo-sleuth:recap
+/echo-sleuth:recap 10
+/echo-sleuth:recap 7d --detail high
+```
+
+- Default: last 5 sessions, medium detail
+- Accepts session count (`10`) or duration (`3d`, `1w`)
+- Detail levels: `low` (one-liners), `medium` (paragraph per session), `high` (full analysis)
+
+#### `/timeline [--limit N] [--since YYYY-MM-DD]`
+
+Chronological project history combining Claude sessions and git commits.
+
+```
+/echo-sleuth:timeline
+/echo-sleuth:timeline --since 2026-03-01 --limit 50
+```
+
+- Merges session timestamps with git commit history
+- Shows what work happened when, in what order
+- Requires git for commit correlation
+
+#### `/lessons [topic] [--scope current|all] [--category decisions|mistakes|patterns|all]`
+
+Extract accumulated wisdom from past sessions.
+
+```
+/echo-sleuth:lessons
+/echo-sleuth:lessons "database" --category decisions
+/echo-sleuth:lessons --scope all --category mistakes
+```
+
+- Surveys all sessions, samples the highest-signal ones (longest, most errors, most recent)
+- Categories: decisions, mistakes, patterns, tool preferences, architecture insights, cost/efficiency
+- Cross-references with git history when available
+
+### Memory Management
+
+#### `/dashboard`
+
+Global overview of Claude Code memories across all projects.
+
+```
+/echo-sleuth:dashboard
+```
+
+Shows:
+- **Summary stats** — how many projects have memories, total files, estimated token load per conversation
+- **Staleness alerts** — memories scored > 50 on the staleness scale, with age, type, and recommended action
+- **Top token consumers** — which projects' memories cost the most tokens
+
+Use this as the entry point to understand your memory landscape before auditing or pruning.
+
+#### `/audit [project] [--deep]`
+
+Audit memory staleness — quick heuristic scan or deep content verification.
+
+```
+/echo-sleuth:audit
+/echo-sleuth:audit pixel-office
+/echo-sleuth:audit --deep
+/echo-sleuth:audit pixel-office --deep
+```
+
+**Without `--deep` (default):** Fast type-based heuristic scoring. Each memory gets a staleness score (0-100) based on its type and age:
+
+| Type | Half-life | Score 50 at | Typical decay |
+|------|-----------|-------------|---------------|
+| `project` | 14 days | 2 weeks | Fast — project context changes often |
+| `feedback` | 90 days | 3 months | Slow — user preferences are stable |
+| `user` | 180 days | 6 months | Very slow — user identity rarely changes |
+| `reference` | 60 days | 2 months | Medium — external links go stale |
+
+Score-to-action: 0-50 = keep, 50-75 = review, 75-100 = prune.
+
+**With `--deep`:** Dispatches the `memory-auditor` agent which reads each memory and verifies its claims against the current codebase:
+- Does the referenced file still exist?
+- Can the mentioned function/class be found via grep?
+- Does the URL return a 200 status?
+- Does the git branch still exist?
+
+Deep audit processes up to 10 projects (highest staleness first) and reports per-memory with evidence.
+
+#### `/extract [session-id] [--scope current|all]`
+
+Extract durable knowledge from a conversation session into memories, CLAUDE.md rules, or human-readable notes.
+
+```
+/echo-sleuth:extract
+/echo-sleuth:extract abc123-def4-5678-ghij-klmnopqrstuv
+/echo-sleuth:extract --scope all
+```
+
+**How it works:**
+
+1. Lists recent sessions (last 7 days) and lets you pick one, or specify a session ID directly
+2. Runs two-pass extraction:
+   - **Tool pass** — finds `AskUserQuestion` decisions and tool errors (lessons)
+   - **Message pass** — finds user corrections ("don't do X"), approved patterns ("perfect, keep doing that"), and referenced URLs
+3. Presents each extractable item with a suggested destination
+4. You choose where each item goes:
+
+| Destination | When to use | What happens |
+|-------------|-------------|-------------|
+| **Memory** | Knowledge for Claude's future behavior | Creates a `.md` file in the project's `memory/` directory with proper frontmatter |
+| **CLAUDE.md** | High-impact rules for every conversation | Appends to the project's CLAUDE.md |
+| **Knowledge file** | Human-readable notes and decision logs | Writes markdown to `docs/knowledge/` (or custom path) |
+| **Skip** | Not worth preserving | Discarded |
+
+Extraction categories:
+- **Decisions** — `AskUserQuestion` calls + user responses
+- **Corrections** — user rejecting Claude's approach (imperative corrections suggest CLAUDE.md)
+- **Patterns** — approaches the user approved ("great", "perfect", "works")
+- **Lessons** — tool failures and error sequences
+- **References** — URLs mentioned in conversation
+
+#### `/prune [project] [--dry-run]`
+
+Interactively clean up stale memories.
+
+```
+/echo-sleuth:prune
+/echo-sleuth:prune pixel-office
+/echo-sleuth:prune --dry-run
+```
+
+For each memory with staleness score > 50, you choose:
+
+| Action | What happens |
+|--------|-------------|
+| **Delete** | Removes the file and its MEMORY.md entry. Content is printed to the conversation first (recoverable from session transcript). |
+| **Archive** | Moves to `memory/archive/` subfolder. Removed from MEMORY.md so Claude no longer loads it, but preserved on disk. |
+| **Keep** | Touches the file to reset the staleness clock. Use when a memory is old but still valid. |
+| **Edit** | Shows content, asks what to change, applies edits in-place. |
+| **Skip** | Move to next memory. |
+
+`--dry-run` shows what would be flagged without taking action.
+
+Reports at the end: N deleted, N archived, N kept, N edited, N skipped, and estimated tokens saved.
 
 ## How it works
 
-1. **Commands** are user-facing entry points that dispatch to specialized agents
-2. **Agents** handle the actual analysis — searching sessions, tracing file history, deep-diving into specific sessions, or detecting schema changes
-3. **Scripts** (Python + bash) do the JSONL parsing and data extraction — no pip dependencies, only Python 3.6+ stdlib
+```
+Commands → dispatch to → Agents → use → Skills (domain knowledge)
+                                  → call → Scripts (data extraction)
+```
+
+1. **Commands** are user-facing entry points
+2. **Agents** handle the actual analysis
+3. **Skills** provide domain knowledge (JSONL format, git patterns, memory conventions)
+4. **Scripts** (Python + bash) do the parsing — no pip dependencies, only Python 3.6+ stdlib
 
 ### Agents
 
 | Agent | Focus |
 |-------|-------|
 | `recall` | Unified search: session finding, decision archaeology, mistake hunting |
-| `file-historian` | Trace a file's history across sessions and git |
-| `analyze` | Deep analysis of specific sessions |
+| `analyze` | Deep analysis and lesson extraction across sessions |
+| `file-historian` | Trace a file's complete history across sessions and git |
 | `schema-scout` | Detect JSONL schema changes across Claude Code versions |
+| `memory-auditor` | Deep content-aware memory verification (file/code/URL/branch checks) |
+
+### Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `jsonl-core` | JSONL parsing infrastructure and record type reference |
+| `git-mining` | Git log/blame/diff patterns for commit-session correlation |
+| `experience-synthesis` | Taxonomy for categorizing insights |
+| `memory-management` | Memory file format, staleness scoring, routing, mutation rules |
 
 ## Prerequisites
 
 - Python 3.6+ (stdlib only, no pip packages)
 - bash
-- git (optional, needed for timeline and file history features)
+- git (optional, for timeline, file history, and branch verification in deep audit)
+- curl (optional, for URL validation in `/audit --deep`)
 
 ## License
 
