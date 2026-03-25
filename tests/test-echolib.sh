@@ -366,6 +366,75 @@ output=$(bash "$SCRIPT_DIR/list-sessions.sh" --badoption 2>&1 || true)
 assert_contains "$output" "ERROR: Unknown option" "edge: unknown option rejected (list-sessions)"
 
 
+echo ""
+echo "--- parse_frontmatter ---"
+
+# Valid frontmatter
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+fm, body = echolib.parse_frontmatter('''---
+name: test memory
+description: a test description
+type: project
+---
+
+Body content here.
+''')
+print(f'name={fm.get(\"name\", \"\")}')
+print(f'type={fm.get(\"type\", \"\")}')
+print(f'body_starts_with={body.strip()[:12]}')
+")
+assert_contains "$output" "name=test memory" "frontmatter: name parsed"
+assert_contains "$output" "type=project" "frontmatter: type parsed"
+assert_contains "$output" "body_starts_with=Body content" "frontmatter: body extracted"
+
+# No frontmatter
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+fm, body = echolib.parse_frontmatter('Just plain text with no frontmatter.')
+print(f'fm_empty={len(fm) == 0}')
+print(f'body={body.strip()}')
+")
+assert_contains "$output" "fm_empty=True" "frontmatter: empty dict when no frontmatter"
+assert_contains "$output" "body=Just plain text" "frontmatter: full text as body when no frontmatter"
+
+# Broken frontmatter (no closing ---)
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+fm, body = echolib.parse_frontmatter('''---
+name: broken
+description: no closing delimiter
+type: project
+
+Some content here.
+''')
+print(f'fm_empty={len(fm) == 0}')
+")
+assert_contains "$output" "fm_empty=True" "frontmatter: empty dict when no closing delimiter"
+
+# Value with colon
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+fm, body = echolib.parse_frontmatter('''---
+name: URL reference
+description: grafana at https://example.com/dashboard
+type: reference
+---
+
+Content.
+''')
+print(f'desc={fm.get(\"description\", \"\")}')
+")
+assert_contains "$output" "desc=grafana at https://example.com/dashboard" "frontmatter: colon in value preserved"
+
 # ===================================================================
 echo ""
 echo "=========================================="

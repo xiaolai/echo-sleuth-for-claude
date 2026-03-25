@@ -663,6 +663,50 @@ def _reverse_find(path, needle, chunk_size=1_048_576):
 
 
 # ---------------------------------------------------------------------------
+# Memory file parsing
+# ---------------------------------------------------------------------------
+
+def parse_frontmatter(text):
+    """
+    Parse simple key: value frontmatter from a markdown string.
+
+    Handles ONLY the subset used by Claude Code memory files:
+    - Block delimited by --- on its own line (first line must be ---)
+    - Key-value pairs: "key: value" (one per line, value is everything after first ": ")
+    - No nested structures, no lists, no multi-line values
+
+    Returns: (dict, body_string)
+    If no valid frontmatter: (empty dict, full text)
+    """
+    lines = text.split("\n")
+    if not lines or lines[0].strip() != "---":
+        return {}, text
+
+    end_idx = -1
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            end_idx = i
+            break
+
+    if end_idx < 0:
+        return {}, text
+
+    fm = {}
+    for line in lines[1:end_idx]:
+        line = line.strip()
+        if not line:
+            continue
+        sep = line.find(": ")
+        if sep > 0:
+            key = line[:sep].strip()
+            value = line[sep + 2:].strip()
+            fm[key] = value
+
+    body = "\n".join(lines[end_idx + 1:])
+    return fm, body
+
+
+# ---------------------------------------------------------------------------
 # Project directory resolution
 # ---------------------------------------------------------------------------
 
