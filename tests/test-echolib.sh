@@ -435,6 +435,81 @@ print(f'desc={fm.get(\"description\", \"\")}')
 ")
 assert_contains "$output" "desc=grafana at https://example.com/dashboard" "frontmatter: colon in value preserved"
 
+echo ""
+echo "--- iter_memories ---"
+
+MEMORY_FIXTURE_1="$FIXTURE_DIR/memory-layout-1"
+MEMORY_FIXTURE_2="$FIXTURE_DIR/memory-layout-2"
+MEMORY_FIXTURE_3="$FIXTURE_DIR/memory-layout-3"
+MEMORY_MALFORMED="$FIXTURE_DIR/memory-malformed"
+
+# Layout 1: index + individual files
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_FIXTURE_1" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+mems = list(echolib.iter_memories(os.environ['ES_DIR']))
+for m in mems:
+    print(f'{m.name}|{m.type}|{m.size}')
+print(f'count={len(mems)}')
+")
+assert_contains "$output" "count=3" "iter_memories: layout 1 yields 3 files (skips MEMORY.md and archive)"
+assert_contains "$output" "project context|project|" "iter_memories: layout 1 parses project memory"
+assert_contains "$output" "testing preferences|feedback|" "iter_memories: layout 1 parses feedback memory"
+assert_not_contains "$output" "old deployment" "iter_memories: layout 1 skips archive/"
+
+# Layout 2: standalone MEMORY.md
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_FIXTURE_2" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+mems = list(echolib.iter_memories(os.environ['ES_DIR']))
+for m in mems:
+    print(f'type={m.type}')
+    print(f'has_content={len(m.content) > 10}')
+print(f'count={len(mems)}')
+")
+assert_contains "$output" "count=1" "iter_memories: layout 2 yields 1 memory from standalone MEMORY.md"
+assert_contains "$output" "type=unknown" "iter_memories: layout 2 type is unknown"
+assert_contains "$output" "has_content=True" "iter_memories: layout 2 has content"
+
+# Layout 3: empty MEMORY.md
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_FIXTURE_3" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+mems = list(echolib.iter_memories(os.environ['ES_DIR']))
+print(f'count={len(mems)}')
+")
+assert_contains "$output" "count=0" "iter_memories: layout 3 (empty) yields 0 memories"
+
+# Malformed frontmatter
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_MALFORMED" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+mems = list(echolib.iter_memories(os.environ['ES_DIR']))
+for m in mems:
+    print(f'{m.name}|{m.type}')
+print(f'count={len(mems)}')
+")
+assert_contains "$output" "count=2" "iter_memories: malformed dir yields 2 memories"
+assert_contains "$output" "None|unknown" "iter_memories: malformed frontmatter yields type=unknown"
+
+# Layout with memory/ subdirectory (exercises basename=="memory" code path)
+MEMORY_FIXTURE_PROJ="$FIXTURE_DIR/fake-project/memory"
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_FIXTURE_PROJ" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+mems = list(echolib.iter_memories(os.environ['ES_DIR']))
+for m in mems:
+    print(f'project={m.project}|type={m.type}')
+print(f'count={len(mems)}')
+")
+assert_contains "$output" "count=1" "iter_memories: fake-project/memory/ yields 1 file"
+assert_contains "$output" "project=fake-project" "iter_memories: project name derived from parent of memory/"
+
 # ===================================================================
 echo ""
 echo "=========================================="

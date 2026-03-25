@@ -6,6 +6,7 @@ Single-file, stdlib-only (Python 3.6+). All scripts are thin wrappers around thi
 Classes:
     Record      — A parsed JSONL record with type-aware accessors.
     SessionMeta — Lightweight session metadata (from index or built from .jsonl).
+    Memory      — A parsed memory file with frontmatter fields.
 
 Functions:
     iter_records()        — Stream records from a .jsonl file with filtering.
@@ -704,6 +705,102 @@ def parse_frontmatter(text):
 
     body = "\n".join(lines[end_idx + 1:])
     return fm, body
+
+
+class Memory:
+    """A parsed memory file."""
+
+    __slots__ = ("path", "name", "description", "type", "content",
+                 "project", "project_dir", "mtime", "size")
+
+    def __init__(self, **kwargs):
+        for k in self.__slots__:
+            setattr(self, k, kwargs.get(k))
+
+
+def iter_memories(memory_dir):
+    """
+    Yield Memory objects from a memory/ directory (or a directory containing
+    .md memory files).
+
+    Layout 1 (index + files): MEMORY.md is index, individual .md files have
+    frontmatter. Yields individual files, skips MEMORY.md and archive/.
+    Layout 2 (standalone): only MEMORY.md exists (no other .md files outside
+    archive/). Yields single Memory with type=unknown.
+    """
+    memory_dir = str(memory_dir)
+
+    # Collect .md files excluding MEMORY.md and archive/
+    md_files = []
+    for entry in sorted(os.listdir(memory_dir)):
+        full = os.path.join(memory_dir, entry)
+        if not os.path.isfile(full):
+            continue
+        if not entry.endswith(".md"):
+            continue
+        if entry == "MEMORY.md":
+            continue
+        md_files.append(full)
+
+    if md_files:
+        # Layout 1: index + individual files
+        for fpath in md_files:
+            try:
+                with open(fpath, encoding="utf-8") as f:
+                    text = f.read()
+                stat = os.stat(fpath)
+            except OSError:
+                continue
+            fm, body = parse_frontmatter(text)
+            yield Memory(
+                path=fpath,
+                name=fm.get("name"),
+                description=fm.get("description"),
+                type=fm.get("type", "unknown"),
+                content=body,
+                project=os.path.basename(os.path.dirname(memory_dir))
+                    if os.path.basename(memory_dir) == "memory"
+                    else os.path.basename(memory_dir),
+                project_dir=os.path.dirname(memory_dir)
+                    if os.path.basename(memory_dir) == "memory"
+                    else memory_dir,
+                mtime=stat.st_mtime,
+                size=stat.st_size,
+            )
+    else:
+        # Layout 2: standalone MEMORY.md (or empty)
+        mem_path = os.path.join(memory_dir, "MEMORY.md")
+        if not os.path.isfile(mem_path):
+            return
+        try:
+            with open(mem_path, encoding="utf-8") as f:
+                text = f.read()
+            stat = os.stat(mem_path)
+        except OSError:
+            return
+        # Skip if effectively empty (just a heading)
+        body = text.strip()
+        lines = body.split("\n")
+        content_lines = [l for l in lines if not l.startswith("# ")]
+        content = "\n".join(content_lines).strip()
+        if not content:
+            return
+        project_name = (os.path.basename(os.path.dirname(memory_dir))
+                        if os.path.basename(memory_dir) == "memory"
+                        else os.path.basename(memory_dir))
+        yield Memory(
+            path=mem_path,
+            name=None,
+            description=None,
+            type="unknown",
+            content=content,
+            project=project_name,
+            project_dir=os.path.dirname(memory_dir)
+                if os.path.basename(memory_dir) == "memory"
+                else memory_dir,
+            mtime=stat.st_mtime,
+            size=stat.st_size,
+        )
 
 
 # ---------------------------------------------------------------------------
