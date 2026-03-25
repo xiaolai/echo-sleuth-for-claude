@@ -550,6 +550,79 @@ print(f'result_none={result is None}')
 ")
 assert_contains "$output" "result_none=True" "resolve_project_root: returns None for nonexistent dir"
 
+echo ""
+echo "--- staleness_score ---"
+
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_FIXTURE_1" python3 -c "
+import os, sys, time
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+mems = list(echolib.iter_memories(os.environ['ES_DIR']))
+for m in mems:
+    ss = echolib.staleness_score(m)
+    print(f'{m.type}|score={ss.score}|action={ss.action}')
+")
+assert_contains "$output" "action=keep" "staleness_score: fresh fixtures score as keep"
+
+# Test with artificially old memory
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys, time, math
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+m = echolib.Memory(
+    path='/fake', name='old', description='old', type='project',
+    content='test', project='test', project_dir='/fake',
+    mtime=time.time() - (60 * 86400),
+    size=100
+)
+ss = echolib.staleness_score(m)
+print(f'score={ss.score}')
+print(f'action={ss.action}')
+print(f'high_score={ss.score > 80}')
+")
+assert_contains "$output" "action=prune" "staleness_score: 60-day-old project memory -> prune"
+assert_contains "$output" "high_score=True" "staleness_score: 60-day-old project memory score > 80"
+
+echo ""
+echo "--- estimate_tokens ---"
+
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+print(f'tokens={echolib.estimate_tokens(\"a\" * 400)}')
+")
+assert_equals "$(echo "$output" | grep tokens= | head -1)" "tokens=100" "estimate_tokens: 400 chars = 100 tokens"
+
+echo ""
+echo "--- all_memory_dirs ---"
+
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+dirs = echolib.all_memory_dirs()
+print(f'count={len(dirs)}')
+print(f'is_list={isinstance(dirs, list)}')
+")
+assert_contains "$output" "is_list=True" "all_memory_dirs: returns a list"
+
+echo ""
+echo "--- memory_stats ---"
+
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" ES_DIR="$MEMORY_FIXTURE_1" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+stats = echolib.memory_stats(os.environ['ES_DIR'])
+print(f'file_count={stats.file_count}')
+print(f'has_tokens={stats.estimated_tokens > 0}')
+print(f'has_dist={len(stats.staleness_distribution) == 4}')
+")
+assert_contains "$output" "file_count=3" "memory_stats: counts 3 files in layout 1"
+assert_contains "$output" "has_tokens=True" "memory_stats: has positive token count"
+assert_contains "$output" "has_dist=True" "memory_stats: has 4-bucket distribution"
+
 # ===================================================================
 echo ""
 echo "=========================================="

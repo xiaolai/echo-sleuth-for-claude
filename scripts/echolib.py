@@ -814,6 +814,95 @@ def iter_memories(memory_dir):
 
 
 # ---------------------------------------------------------------------------
+# Staleness scoring and memory statistics
+# ---------------------------------------------------------------------------
+
+class StaleScore:
+    """Staleness assessment for a memory."""
+    __slots__ = ("score", "reasons", "action")
+    def __init__(self, **kwargs):
+        for k in self.__slots__:
+            setattr(self, k, kwargs.get(k))
+
+class MemoryStats:
+    """Aggregate stats for one project's memories."""
+    __slots__ = ("project", "file_count", "total_bytes",
+                 "estimated_tokens", "staleness_distribution")
+    def __init__(self, **kwargs):
+        for k in self.__slots__:
+            setattr(self, k, kwargs.get(k))
+
+_HALF_LIVES = {
+    "project": 14, "feedback": 90, "user": 180,
+    "reference": 60, "unknown": 30,
+}
+
+def staleness_score(memory):
+    """Compute type-based heuristic staleness score using exponential decay."""
+    import time
+    age_days = (time.time() - memory.mtime) / 86400.0
+    half_life = _HALF_LIVES.get(memory.type, 30)
+    score = int(100 * (1 - math.exp(-age_days * math.log(2) / half_life)))
+    score = max(0, min(100, score))
+    reasons = []
+    if age_days > half_life:
+        reasons.append("older than half-life (%d days for type=%s)" % (half_life, memory.type))
+    if age_days > half_life * 3:
+        reasons.append("significantly past expiry")
+    if score < 50:
+        action = "keep"
+    elif score < 75:
+        action = "review"
+    else:
+        action = "prune"
+    return StaleScore(score=score, reasons=reasons, action=action)
+
+def estimate_tokens(text):
+    """Rough token estimate: len(text) // 4."""
+    return len(text) // 4
+
+def all_memory_dirs():
+    """Scan ~/.claude/projects/ for directories containing memory/ subdirs.
+    Returns list of (encoded_project_name, memory_dir_path) tuples."""
+    result = []
+    if not CLAUDE_DIR.exists():
+        return result
+    for d in CLAUDE_DIR.iterdir():
+        if not d.is_dir():
+            continue
+        mem_dir = d / "memory"
+        if mem_dir.is_dir():
+            result.append((d.name, str(mem_dir)))
+    return result
+
+def memory_stats(memory_dir):
+    """Aggregate stats for one project's memories."""
+    mems = list(iter_memories(memory_dir))
+    total_bytes = sum(m.size for m in mems)
+    total_content = "".join(m.content for m in mems)
+    dist = {"fresh": 0, "aging": 0, "review": 0, "stale": 0}
+    for m in mems:
+        ss = staleness_score(m)
+        if ss.score < 25:
+            dist["fresh"] += 1
+        elif ss.score < 50:
+            dist["aging"] += 1
+        elif ss.score < 75:
+            dist["review"] += 1
+        else:
+            dist["stale"] += 1
+    project_name = (os.path.basename(os.path.dirname(memory_dir))
+                    if os.path.basename(memory_dir) == "memory"
+                    else os.path.basename(memory_dir))
+    return MemoryStats(
+        project=project_name, file_count=len(mems),
+        total_bytes=total_bytes,
+        estimated_tokens=estimate_tokens(total_content),
+        staleness_distribution=dist,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Project directory resolution
 # ---------------------------------------------------------------------------
 
