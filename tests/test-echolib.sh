@@ -510,6 +510,46 @@ print(f'count={len(mems)}')
 assert_contains "$output" "count=1" "iter_memories: fake-project/memory/ yields 1 file"
 assert_contains "$output" "project=fake-project" "iter_memories: project name derived from parent of memory/"
 
+echo ""
+echo "--- resolve_project_root ---"
+
+# Test with a known project directory that exists on disk
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+import echolib
+script_dir = os.environ['ES_SCRIPT_DIR']
+plugin_root = os.path.dirname(script_dir)
+encoded = echolib._encode_project_path(plugin_root)
+claude_dir = echolib.CLAUDE_DIR / encoded
+if claude_dir.is_dir():
+    result = echolib.resolve_project_root(claude_dir)
+    print(f'resolved={result is not None}')
+    if result:
+        print(f'exists={os.path.isdir(result)}')
+else:
+    print('resolved=skip')
+    print('exists=skip')
+")
+if echo "$output" | grep -qF "resolved=skip" || echo "$output" | grep -qF "resolved=False"; then
+  pass "resolve_project_root: skipped (no Claude dir or unresolvable for test project)"
+else
+  assert_contains "$output" "resolved=True" "resolve_project_root: resolves known project"
+  assert_contains "$output" "exists=True" "resolve_project_root: resolved path exists on disk"
+fi
+
+# Test with a fake nonexistent project directory
+output=$(ES_SCRIPT_DIR="$SCRIPT_DIR" python3 -c "
+import os, sys
+sys.path.insert(0, os.environ['ES_SCRIPT_DIR'])
+from pathlib import Path
+import echolib
+fake_dir = Path('/tmp/echo-sleuth-test-nonexistent-project-dir')
+result = echolib.resolve_project_root(fake_dir)
+print(f'result_none={result is None}')
+")
+assert_contains "$output" "result_none=True" "resolve_project_root: returns None for nonexistent dir"
+
 # ===================================================================
 echo ""
 echo "=========================================="

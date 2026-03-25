@@ -18,9 +18,19 @@ Functions:
     list_sessions()       — List sessions across projects (index + fallback).
     find_project_dir()    — Map a project path to its Claude session directory.
     build_fallback_index() — Build index entries for projects without sessions-index.json.
+
+    # Memory management:
+    parse_frontmatter()   — Parse simple key:value frontmatter from .md files.
+    resolve_project_root() — Map encoded project dir back to filesystem path.
+    all_memory_dirs()     — Find all projects with memory/ directories.
+    iter_memories()       — Yield parsed Memory objects from a memory directory.
+    staleness_score()     — Compute heuristic staleness for a memory.
+    estimate_tokens()     — Rough token count estimate.
+    memory_stats()        — Aggregate stats for one project's memories.
 """
 
 import json
+import math
 import os
 import sys
 from collections import Counter
@@ -878,6 +888,43 @@ def find_project_dir(target):
                 best_match = d
 
     return best_match
+
+
+def resolve_project_root(project_dir):
+    """
+    Map a Claude encoded project directory back to its real filesystem path.
+    Returns: absolute path string, or None if unresolvable.
+    """
+    project_dir = Path(project_dir) if not isinstance(project_dir, Path) else project_dir
+    if not project_dir.is_dir():
+        return None
+
+    # Strategy 1: sessions-index.json
+    index_path = project_dir / "sessions-index.json"
+    if index_path.exists():
+        try:
+            with open(index_path, encoding="utf-8") as f:
+                data = json.load(f)
+            orig = data.get("originalPath", "")
+            if orig and os.path.isdir(orig):
+                return orig
+            entries = data.get("entries", [])
+            if isinstance(entries, list):
+                for s in entries:
+                    pp = s.get("projectPath", "")
+                    if pp and os.path.isdir(pp):
+                        return pp
+        except (json.JSONDecodeError, OSError, TypeError):
+            pass
+
+    # Strategy 2: best-effort decode
+    dirname = project_dir.name
+    if dirname.startswith("-"):
+        decoded = "/" + dirname[1:].replace("-", "/")
+        if os.path.isdir(decoded):
+            return decoded
+
+    return None
 
 
 def all_project_dirs():
