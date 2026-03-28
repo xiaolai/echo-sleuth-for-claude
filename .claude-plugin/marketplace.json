@@ -8,13 +8,18 @@
         "repo": "xiaolai/echo-sleuth-for-claude"
       },
       "description": "Mine past Claude Code conversations for decisions, mistakes, patterns, and wisdom. Manage memory lifecycle: audit staleness, extract knowledge, prune waste.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "author": {
         "name": "xiaolai"
       },
       "repository": "https://github.com/xiaolai/echo-sleuth-for-claude",
       "license": "MIT",
-      "keywords": ["conversation-history", "session-recall", "experience-mining", "git-history"],
+      "keywords": [
+        "conversation-history",
+        "session-recall",
+        "experience-mining",
+        "git-history"
+      ],
       "category": "developer-tools"
     }
   ]
