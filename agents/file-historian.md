@@ -89,7 +89,7 @@ Merge git commits and session data by timestamp:
 
 ### Step 4: Deep context
 
-For the most important changes, read the conversation to extract:
+For changes with the most lines added/removed or the most recent changes, read the conversation to extract:
 - What problem prompted the change
 - What approaches were tried
 - Why the final version looks the way it does

@@ -60,6 +60,18 @@ imperative_patterns = re.compile(
 )
 url_pattern = re.compile(r"https?://[^\s\)\"'>]+")
 
+value_patterns = re.compile(
+    r"\b(\w+\s+(?:is|are)\s+(?:better|more important|more valuable|preferable)\s+(?:than|over|to)\s+)|"
+    r"\b(prefer\s+\w+\s+(?:over|to|instead of)\s+)|"
+    r"\b(prioritize\s+\w+\s+over\s+)|"
+    r"\b(\w+\s+(?:matters?|trumps?|outweighs?|beats?)\s+(?:more than\s+)?)|"
+    r"\b(choose\s+\w+\s+over\s+)|"
+    r"\b((?:the )?most (?:important|valuable|useful|durable)\s+(?:\w+\s+)?(?:is|are)\s+)|"
+    r"\b(rather\s+\w+\s+than\s+)|"
+    r"\b(\w+\s+>\s+\w+)",
+    re.IGNORECASE
+)
+
 prev_assistant_text = ""
 for msg in echolib.extract_messages(session_path, role="both"):
     text = msg.get("text", "")
@@ -73,6 +85,15 @@ for msg in echolib.extract_messages(session_path, role="both"):
         continue
 
     # User messages below
+    if value_patterns.search(text):
+        items.append({
+            "category": "value",
+            "content": text[:300],
+            "timestamp": msg.get("timestamp", ""),
+            "suggested_destination": "memory",
+            "suggested_type": "value",
+        })
+
     if correction_patterns.search(text):
         dest = "claude_md" if imperative_patterns.search(text) else "memory"
         items.append({

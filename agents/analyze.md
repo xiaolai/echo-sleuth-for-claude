@@ -99,14 +99,15 @@ Map git sessions to Claude sessions by timestamp. This reveals:
 ### Step 5: Analyze across dimensions
 
 Apply the insight taxonomy from experience-synthesis:
-1. **Decisions** — What was chosen, why, what was rejected
-2. **Mistakes** — What went wrong, root causes, fixes
-3. **Effective Patterns** — Approaches that worked well
-4. **Anti-patterns** — Approaches that failed
-5. **User Preferences** — Tool usage, model choices, workflow habits
-6. **Architecture Knowledge** — System design, component relationships
-7. **Recurring Problems** — Issues that keep coming back
-8. **Performance & Cost** — Token usage, cache efficiency, session length trends
+1. **Learned Values** — Comparative preferences: "X is better than Y", priority orderings
+2. **Decisions** — What was chosen, why, what was rejected
+3. **Mistakes** — What went wrong, root causes, fixes
+4. **Effective Patterns** — Approaches that worked well
+5. **Anti-patterns** — Approaches that failed
+6. **User Preferences** — Tool usage, model choices, workflow habits
+7. **Architecture Knowledge** — System design, component relationships
+8. **Recurring Problems** — Issues that keep coming back
+9. **Performance & Cost** — Token usage, cache efficiency, session length trends
 
 ### Step 6: Pattern mining specifics
 

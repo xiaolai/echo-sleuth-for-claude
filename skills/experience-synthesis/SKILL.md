@@ -8,9 +8,20 @@ version: 0.1.0
 
 ## Insight Taxonomy
 
-When analyzing conversations, extract insights in these categories:
+When analyzing conversations, extract insights in these categories (ordered by durability — values first):
 
-### 1. Decisions
+### 1. Learned Values
+Comparative preferences and priority orderings — "X is better than Y".
+
+**Signal sources:**
+- User states "prefer X over Y", "X is better than Y", "X matters more than Y"
+- User confirms a comparative statement from Claude ("yes, readability > cleverness")
+- Trade-off discussions that resolve into a clear preference
+- Statements with "prioritize", "choose X over Y", "the most important thing is"
+
+**What to capture:** The value choice, both sides of the comparison, and the reasoning. Values are the most durable type of memory — they survive codebase rewrites.
+
+### 2. Decisions
 What was chosen, why, and what alternatives were rejected.
 
 **Signal sources:**
@@ -21,7 +32,7 @@ What was chosen, why, and what alternatives were rejected.
 
 **What to capture:** The decision, the rationale, the alternatives considered, and the context (what problem it solved).
 
-### 2. Mistakes & Corrections
+### 3. Mistakes & Corrections
 What went wrong, root cause, and how it was fixed.
 
 **Signal sources:**
@@ -33,7 +44,7 @@ What went wrong, root cause, and how it was fixed.
 
 **What to capture:** What failed, why it failed, what fixed it, how to avoid it next time.
 
-### 3. Effective Patterns
+### 4. Effective Patterns
 Approaches that worked well and could be reused.
 
 **Signal sources:**
@@ -45,7 +56,7 @@ Approaches that worked well and could be reused.
 
 **What to capture:** The approach, when it applies, why it worked.
 
-### 4. Anti-patterns
+### 5. Anti-patterns
 Approaches that failed, were abandoned, or caused problems.
 
 **Signal sources:**
@@ -56,7 +67,7 @@ Approaches that failed, were abandoned, or caused problems.
 
 **What to capture:** What was tried, why it failed, what worked instead.
 
-### 5. User Preferences
+### 6. User Preferences
 The user's preferred tools, styles, and workflows.
 
 **Signal sources:**
@@ -68,7 +79,7 @@ The user's preferred tools, styles, and workflows.
 
 **What to capture:** The preference, evidence across sessions, strength of pattern.
 
-### 6. Architecture Knowledge
+### 7. Architecture Knowledge
 System design decisions, component relationships, tech stack details.
 
 **Signal sources:**
@@ -79,7 +90,7 @@ System design decisions, component relationships, tech stack details.
 
 **What to capture:** Component, its role, relationships, key decisions about it.
 
-### 7. Recurring Problems
+### 8. Recurring Problems
 Issues that keep coming back across sessions.
 
 **Signal sources:**
@@ -89,7 +100,7 @@ Issues that keep coming back across sessions.
 
 **What to capture:** The problem, frequency, root cause pattern, whether it has a permanent fix.
 
-### 8. Performance & Cost Patterns
+### 9. Performance & Cost Patterns
 Token usage trends, session efficiency, cost optimization opportunities.
 
 **Signal sources:**

@@ -21,11 +21,11 @@ Present the list and ask the user which session to extract from (or default to t
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-knowledge.sh" SESSION_JSONL_PATH
 
 This outputs a JSON array of candidate extractable items, each with:
-- `category`: decision | correction | pattern | lesson | reference
+- `category`: value | decision | correction | pattern | lesson | reference
 - `content`: summary text
 - `timestamp`: when it occurred
 - `suggested_destination`: memory | claude_md | knowledge_file | skip
-- `suggested_type`: user | feedback | project | reference
+- `suggested_type`: value | user | feedback | project | reference
 
 **Step 3: Present items to user**
 

@@ -4,7 +4,29 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 # Insight Taxonomy — Detailed Category Reference
 
-## Category 1: Decisions
+## Category 1: Learned Values
+
+### Sub-types
+- **Comparative preference**: X is better/more important than Y
+- **Priority ordering**: X matters more than Y, prioritize X over Y
+- **Trade-off principle**: When X conflicts with Y, choose X because...
+- **Quality hierarchy**: What defines "good" in a given domain
+
+### Extraction cues
+- "X is better than Y", "prefer X over Y", "X matters more than Y"
+- "prioritize X over Y", "X > Y", "choose X over Y"
+- "the most important/valuable thing is...", "what matters most is..."
+- User states a comparative judgment and Claude confirms, or vice versa
+- Trade-off discussions that resolve into a clear preference
+
+### Why values are the highest-priority memory
+- Facts decay (files move, APIs change, branches get deleted)
+- Values persist (readability > cleverness survives any rewrite)
+- Values compound — they shape every future decision, not just one
+
+---
+
+## Category 2: Decisions
 
 ### Sub-types
 - **Technology choice**: Chose library A over B
@@ -20,7 +42,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 2: Mistakes & Corrections
+## Category 3: Mistakes & Corrections
 
 ### Sub-types
 - **Syntax/Type error**: Code doesn't compile/run
@@ -36,7 +58,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 3: Effective Patterns
+## Category 4: Effective Patterns
 
 ### Sub-types
 - **Debugging pattern**: Effective way to diagnose issues
@@ -47,7 +69,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 4: Anti-patterns
+## Category 5: Anti-patterns
 
 ### Sub-types
 - **Premature optimization**: Optimized before it worked
@@ -58,7 +80,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 5: User Preferences
+## Category 6: User Preferences
 
 ### Sub-types
 - **Tool preferences**: Which tools, frameworks, languages preferred
@@ -69,7 +91,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 6: Architecture Knowledge
+## Category 7: Architecture Knowledge
 
 ### Sub-types
 - **Component map**: What exists and how it connects
@@ -80,7 +102,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 7: Recurring Problems
+## Category 8: Recurring Problems
 
 ### Sub-types
 - **Flaky tests**: Tests that intermittently fail
@@ -91,7 +113,7 @@ description: Taxonomy of insight categories for classifying patterns extracted f
 
 ---
 
-## Category 8: Performance & Cost Patterns
+## Category 9: Performance & Cost Patterns
 
 ### Metrics to track
 - **Tokens per session**: Total input + output tokens

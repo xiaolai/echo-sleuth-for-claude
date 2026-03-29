@@ -1,6 +1,7 @@
 ---
 name: memory-management
 description: Use when auditing, extracting, pruning, or writing Claude Code memory files. Covers memory file format, MEMORY.md index conventions, staleness scoring, claim extraction heuristics, destination routing, mutation rules, and archive conventions.
+version: 0.2.0
 ---
 
 # Memory Management
@@ -12,7 +13,7 @@ Frontmatter schema (simple key: value, NOT general YAML):
     ---
     name: <string, required>           # short identifier
     description: <string, required>    # one-line summary for relevance matching
-    type: <enum, required>             # user | feedback | project | reference
+    type: <enum, required>             # value | user | feedback | project | reference
     ---
 
 - All values are plain strings, no quoting needed unless value contains `:`
@@ -33,10 +34,11 @@ Exponential decay: `score = 100 * (1 - exp(-age_days * ln(2) / half_life))`
 
 | Type | Half-life | Score 50 at | Score 90 at |
 |------|-----------|-------------|-------------|
-| project | 14 days | 14d | ~47d |
-| feedback | 90 days | 90d | ~299d |
+| value | 365 days | 365d | ~1213d |
 | user | 180 days | 180d | ~598d |
+| feedback | 90 days | 90d | ~299d |
 | reference | 60 days | 60d | ~199d |
+| project | 14 days | 14d | ~47d |
 | unknown | 30 days | 30d | ~100d |
 
 Score-to-action: 0-50 = keep, 50-75 = review, 75-100 = prune.
@@ -63,10 +65,13 @@ Skip generic descriptions that aren't verifiable (e.g., "use a database" vs "use
 
 | Destination | When to Use | Target Path |
 |-------------|-------------|-------------|
+| Memory file (value) | Learned value choices — "X is better than Y" | Session's project `memory/` dir, type=value |
 | Memory file | Knowledge for Claude's future behavior | Session's project `memory/` dir |
 | CLAUDE.md | High-impact instructions for every conversation | Session's project root CLAUDE.md |
 | Knowledge file | Human-readable notes, decision logs | `docs/knowledge/` in project root |
 | Skip | Session-specific, not worth preserving | — |
+
+**Priority:** Value choices are the most durable memories. When extracting, surface them first. Facts decay (files move, APIs change); values persist (readability > cleverness survives any rewrite).
 
 **Rule:** Always target the session's originating project, not the current shell cwd.
 

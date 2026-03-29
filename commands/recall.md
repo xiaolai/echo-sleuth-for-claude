@@ -6,6 +6,8 @@ model: sonnet
 
 Search past Claude Code conversation sessions for information about: $ARGUMENTS
 
+If no search topic is provided, show the 10 most recent sessions for the current project as a summary list.
+
 Launch the `recall` agent via the Task tool with the following context:
 
 - **Search topic**: $ARGUMENTS

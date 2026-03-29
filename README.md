@@ -9,7 +9,7 @@ Echo Sleuth analyzes your Claude Code session history (`~/.claude/projects/`) an
 - **Search past sessions** — find conversations by keyword, date, or file
 - **Summarize recent work** — get a quick recap of what happened across sessions
 - **Build timelines** — chronological project history combining sessions and git commits
-- **Extract lessons** — surface patterns, mistakes, and decisions worth remembering
+- **Extract lessons** — surface values, patterns, mistakes, and decisions worth remembering
 - **Audit memories** — find stale, broken, or wasteful memories across all projects
 - **Extract knowledge** — distill conversations into durable memories, CLAUDE.md rules, or human notes
 - **Prune waste** — interactively clean up memories that silently eat tokens and money
@@ -94,7 +94,7 @@ Extract accumulated wisdom from past sessions.
 ```
 
 - Surveys all sessions, samples the highest-signal ones (longest, most errors, most recent)
-- Categories: decisions, mistakes, patterns, tool preferences, architecture insights, cost/efficiency
+- Categories: learned values, decisions, mistakes, patterns, tool preferences, architecture insights, cost/efficiency
 - Cross-references with git history when available
 
 ### Memory Management
@@ -129,10 +129,11 @@ Audit memory staleness — quick heuristic scan or deep content verification.
 
 | Type | Half-life | Score 50 at | Typical decay |
 |------|-----------|-------------|---------------|
-| `project` | 14 days | 2 weeks | Fast — project context changes often |
-| `feedback` | 90 days | 3 months | Slow — user preferences are stable |
+| `value` | 365 days | 1 year | Slowest — learned preferences ("X > Y") outlast everything |
 | `user` | 180 days | 6 months | Very slow — user identity rarely changes |
+| `feedback` | 90 days | 3 months | Slow — user preferences are stable |
 | `reference` | 60 days | 2 months | Medium — external links go stale |
+| `project` | 14 days | 2 weeks | Fast — project context changes often |
 
 Score-to-action: 0-50 = keep, 50-75 = review, 75-100 = prune.
 
@@ -171,6 +172,7 @@ Extract durable knowledge from a conversation session into memories, CLAUDE.md r
 | **Skip** | Not worth preserving | Discarded |
 
 Extraction categories:
+- **Values** — comparative preferences ("X is better than Y", "prefer X over Y") — the most durable type of memory
 - **Decisions** — `AskUserQuestion` calls + user responses
 - **Corrections** — user rejecting Claude's approach (imperative corrections suggest CLAUDE.md)
 - **Patterns** — approaches the user approved ("great", "perfect", "works")

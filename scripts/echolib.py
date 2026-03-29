@@ -834,7 +834,7 @@ class MemoryStats:
 
 _HALF_LIVES = {
     "project": 14, "feedback": 90, "user": 180,
-    "reference": 60, "unknown": 30,
+    "reference": 60, "value": 365, "unknown": 30,
 }
 
 def staleness_score(memory):
