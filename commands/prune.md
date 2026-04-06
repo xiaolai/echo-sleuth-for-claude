@@ -1,4 +1,5 @@
 ---
+name: prune
 description: Interactive memory cleanup — review and prune stale memories
 argument-hint: [project] [--dry-run]
 model: sonnet

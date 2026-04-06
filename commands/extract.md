@@ -1,4 +1,5 @@
 ---
+name: extract
 description: Extract knowledge from a conversation session — decisions, corrections, patterns, and references
 argument-hint: [session-id] [--scope current|all]
 model: sonnet

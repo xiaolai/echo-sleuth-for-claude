@@ -1,4 +1,5 @@
 ---
+name: timeline
 description: Show chronological timeline of project work
 argument-hint: [--limit N] [--since YYYY-MM-DD]
 model: sonnet

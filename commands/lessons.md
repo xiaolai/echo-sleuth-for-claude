@@ -1,4 +1,5 @@
 ---
+name: lessons
 description: Extract accumulated wisdom from past sessions
 argument-hint: [topic] [--scope current|all] [--category decisions|mistakes|patterns|all]
 model: sonnet
