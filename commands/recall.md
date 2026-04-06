@@ -1,4 +1,5 @@
 ---
+name: recall
 description: Search past conversations for a topic, decision, or mistake
 argument-hint: <search-topic> [--scope current|all] [--limit N]
 model: sonnet

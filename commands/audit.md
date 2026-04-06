@@ -1,4 +1,5 @@
 ---
+name: audit
 description: Audit memory staleness — heuristic scan or deep content verification
 argument-hint: [project] [--deep]
 model: sonnet

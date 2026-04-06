@@ -1,4 +1,5 @@
 ---
+name: recap
 description: Summarize recent sessions
 argument-hint: [N-sessions-or-days] [--detail low|medium|high]
 model: sonnet
