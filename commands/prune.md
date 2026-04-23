@@ -3,6 +3,7 @@ name: prune
 description: Interactive memory cleanup — review and prune stale memories
 argument-hint: [project] [--dry-run]
 model: sonnet
+allowed-tools: Bash, Read, Edit, AskUserQuestion
 ---
 
 Interactively clean up stale Claude Code memories.

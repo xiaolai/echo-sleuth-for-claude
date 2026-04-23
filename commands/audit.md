@@ -3,6 +3,7 @@ name: audit
 description: Audit memory staleness — heuristic scan or deep content verification
 argument-hint: [project] [--deep]
 model: sonnet
+allowed-tools: Bash, Task
 ---
 
 Audit Claude Code memories for staleness.

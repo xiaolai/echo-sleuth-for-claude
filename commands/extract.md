@@ -3,6 +3,7 @@ name: extract
 description: Extract knowledge from a conversation session — decisions, corrections, patterns, and references
 argument-hint: [session-id] [--scope current|all]
 model: sonnet
+allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 ---
 
 Extract durable knowledge from a past Claude Code conversation session.

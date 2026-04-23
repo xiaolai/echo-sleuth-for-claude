@@ -3,6 +3,7 @@ name: dashboard
 description: Global memory overview — staleness alerts, token costs, and stats across all projects
 argument-hint:
 model: sonnet
+allowed-tools: Bash
 ---
 
 Show a global overview of Claude Code memories across all projects.

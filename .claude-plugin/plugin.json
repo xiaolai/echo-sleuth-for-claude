@@ -1,6 +1,6 @@
 {
   "name": "echo-sleuth",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Mine past Claude Code conversations for decisions, mistakes, patterns, and wisdom",
   "author": {
     "name": "xiaolai"
