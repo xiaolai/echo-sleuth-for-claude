@@ -1,11 +1,11 @@
 {
   "name": "echo-sleuth",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Mine past Claude Code conversations for decisions, mistakes, patterns, and wisdom",
   "author": {
     "name": "xiaolai"
   },
-  "license": "MIT",
+  "license": "ISC",
   "keywords": [
     "conversation-history",
     "session-recall",

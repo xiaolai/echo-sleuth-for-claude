@@ -243,4 +243,4 @@ Commands → dispatch to → Agents → use → Skills (domain knowledge)
 
 ## License
 
-MIT
+ISC
