@@ -44,7 +44,7 @@ Then install:
 
 ### Conversation Mining
 
-#### `/recall <topic> [--scope current|all] [--limit N]`
+#### `/recall <topic> [--scope current|all] [--limit N] [--lite]`
 
 Search past conversations for a topic, decision, or mistake.
 
@@ -52,11 +52,13 @@ Search past conversations for a topic, decision, or mistake.
 /echo-sleuth:recall "why did we choose SQLite"
 /echo-sleuth:recall "authentication bug" --scope all
 /echo-sleuth:recall "CI setup" --limit 20
+/echo-sleuth:recall vitepress --lite
 ```
 
 - Searches session summaries, first prompts, and message content
 - Auto-detects focus: decision archaeology ("why did we..."), mistake hunting ("what went wrong..."), or general search
 - Default scope: current project. Use `--scope all` to search across all projects.
+- `--lite` skips agent dispatch and synthesis. The slash command runs `recall-lite.sh` and returns its raw output verbatim — minimum-tokens mode for when you hit billing limits or just want raw evidence. See [Lite mode and API usage](#lite-mode-and-api-usage) below.
 
 #### `/recap [N-sessions|duration] [--detail low|medium|high]`
 
@@ -204,6 +206,54 @@ For each memory with staleness score > 50, you choose:
 `--dry-run` shows what would be flagged without taking action.
 
 Reports at the end: N deleted, N archived, N kept, N edited, N skipped, and estimated tokens saved.
+
+## Lite mode and API usage
+
+Echo Sleuth is a Claude Code plugin, so every command goes through a model turn — that's how slash commands, agents, and skills work. The local Python and shell scripts (`scripts/`) parse JSONL files without any API calls, but turning their raw output into "here's what was decided and why" is what costs a model turn.
+
+That matters in two situations:
+
+1. **Your session is on a tier that rejects requests.** For example, `claude-opus-4-7[1m]` (the 1M-context Opus variant) requires Extra Usage to be enabled. If it isn't, every command — including `/recall` — fails with `API Error: Extra usage is required for 1M context` before any work happens.
+2. **You only want raw evidence.** Sometimes you don't need synthesis; you just want the matched messages dumped to your terminal so you can read them yourself.
+
+Two ways to avoid the synthesis cost:
+
+### Option A: `/echo-sleuth:recall <keyword> --lite`
+
+Stays inside Claude Code, but the slash command skips agent dispatch and runs the shell script directly. The model spends one cheap turn passing your keyword to the script and returning its output verbatim — no synthesis, no ranking, no commentary. Works on standard tiers and is the cheapest API path.
+
+```
+/echo-sleuth:recall vitepress --lite
+/echo-sleuth:recall "auth bug" --scope all --limit 10 --lite
+```
+
+### Option B: `scripts/recall-lite.sh` directly from a shell
+
+Zero API calls. Run it from your terminal:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/recall-lite.sh <keyword> [--scope current|all] [--limit N] [--deep]
+
+# Example
+~/.claude/plugins/cache/xiaolai/echo-sleuth/<version>/scripts/recall-lite.sh vitepress --limit 5
+```
+
+The script:
+- Lists matching sessions via `list-sessions.sh`
+- Dumps user messages (intent) and tool errors for the top N matches
+- With `--deep`, also dumps a full message excerpt (both roles, up to 30 messages per session)
+
+You read the output yourself. No synthesis, no ranking by decision-relevance — that's the trade-off for zero API cost.
+
+### When to use which
+
+| Goal | Use |
+|------|-----|
+| "Why did we choose SQLite, and what alternatives did we reject?" | `/echo-sleuth:recall ...` (full mode — needs synthesis) |
+| "Show me every session that mentioned vitepress; I'll read them" | `/echo-sleuth:recall vitepress --lite` |
+| "I'm rate-limited / on the wrong tier / want zero API cost" | `scripts/recall-lite.sh` from your shell |
+
+If a `/recall` command fails with a billing/tier error, re-run with `--lite`, or fall back to the shell script.
 
 ## How it works
 
