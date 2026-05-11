@@ -1,5 +1,7 @@
 # echo-sleuth
 
+[![Validated by NLPM](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/xiaolai/echo-sleuth-for-claude/main/nlpm-badge.json)](https://github.com/xiaolai/echo-sleuth-for-claude/blob/main/nlpm-badge.json)
+
 Mine past Claude Code conversations and manage the knowledge lifecycle — search sessions, extract lessons, audit memory staleness, prune token waste.
 
 ## What it does
