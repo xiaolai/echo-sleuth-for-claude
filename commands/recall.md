@@ -2,7 +2,6 @@
 name: recall
 description: Search past conversations for a topic, decision, or mistake. Pass --lite for raw, no-synthesis output (works on standard tier; cheapest API path).
 argument-hint: <search-topic> [--scope current|all] [--limit N] [--lite]
-model: sonnet
 ---
 
 Search past Claude Code conversation sessions for information about: $ARGUMENTS

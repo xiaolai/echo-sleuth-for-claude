@@ -14,7 +14,6 @@ description: Use this agent when the user asks to deeply audit memory staleness,
   assistant: "I'll use the memory-auditor agent to verify file references in your memories."
   </example>
 
-model: sonnet
 color: yellow
 tools: Read, Bash, Grep, Glob
 skills:

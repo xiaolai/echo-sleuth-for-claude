@@ -2,7 +2,6 @@
 name: timeline
 description: Show chronological timeline of project work
 argument-hint: [--limit N] [--since YYYY-MM-DD]
-model: sonnet
 ---
 
 Show a chronological timeline of work on the current project, combining Claude Code session history with git history.

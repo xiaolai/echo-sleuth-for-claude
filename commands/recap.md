@@ -2,7 +2,6 @@
 name: recap
 description: Summarize recent sessions
 argument-hint: [N-sessions-or-days] [--detail low|medium|high]
-model: sonnet
 ---
 
 Summarize recent Claude Code sessions for the current project.

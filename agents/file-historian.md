@@ -20,7 +20,6 @@ description: Use this agent when the user asks "what happened to this file", "hi
   </commentary>
   </example>
 
-model: sonnet
 color: green
 tools: Read, Bash, Grep, Glob
 skills:

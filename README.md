@@ -257,6 +257,20 @@ You read the output yourself. No synthesis, no ranking by decision-relevance —
 
 If a `/recall` command fails with a billing/tier error, re-run with `--lite`, or fall back to the shell script.
 
+### Choosing a model
+
+Echo Sleuth's commands and agents inherit your active session model — they no longer pin to Sonnet. Whatever you select with `/model` is what runs the synthesis turn.
+
+Practical tradeoffs:
+
+| Model | When it fits |
+|-------|--------------|
+| Haiku | Index lookups, raw matches, `--lite` flows. Cheapest. |
+| Sonnet | Default for most synthesis: `/recall`, `/recap`, `/timeline`, `/audit`. Strong cost/quality balance. |
+| Opus | Heavy reasoning over many sessions: `/lessons`, deep `/extract`, cross-session pattern hunting. Most expensive. |
+
+If you want a per-command override, edit the file's frontmatter directly — e.g. add `model: opus` to `commands/lessons.md`.
+
 ## How it works
 
 ```

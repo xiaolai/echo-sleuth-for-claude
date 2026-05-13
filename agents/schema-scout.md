@@ -20,7 +20,6 @@ description: Use this agent when the user asks "has the format changed", "check 
   </commentary>
   </example>
 
-model: sonnet
 color: yellow
 tools: Read, Bash, Grep, Glob
 skills:

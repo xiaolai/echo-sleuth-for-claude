@@ -38,7 +38,6 @@ description: Use this agent when the user asks "how did I get here", "find sessi
   </commentary>
   </example>
 
-model: sonnet
 color: blue
 tools: Read, Bash, Grep, Glob
 skills:

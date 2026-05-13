@@ -38,7 +38,6 @@ description: Use this agent when the user asks "what can we learn", "extract wis
   </commentary>
   </example>
 
-model: sonnet
 color: magenta
 tools: Read, Bash, Grep, Glob
 skills:
