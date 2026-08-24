@@ -1,5 +1,11 @@
 {
   "name": "xiaolai",
+  "owner": {
+    "name": "xiaolai"
+  },
+  "metadata": {
+    "description": "echo-sleuth — mine past Claude Code conversations for decisions, mistakes and wisdom, by xiaolai"
+  },
   "plugins": [
     {
       "name": "echo-sleuth",
